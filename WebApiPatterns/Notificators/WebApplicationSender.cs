@@ -11,7 +11,7 @@ namespace WebApiPatterns.Notificators
 
         protected override async Task<NotificationResponse> SendAsync(NotificationRequest notification)
         {
-            await _hubContext.Clients.All.SendAsync(notification.Notification);
+            await _hubContext.Clients.All.SendAsync("ReceiveNotification", notification.Notification);
 
             return new NotificationResponse(notification.Notification, "WebApplicationSender");
         }
