@@ -42,7 +42,6 @@ namespace WebApiPatterns.Application
         }
         public async void CreateIncidentTwo(CriticalEvent criticalEvent)
         {
-
             var sourceEventDate = DateTime.Now;
             int secondsToWait = 20;
 
@@ -56,7 +55,6 @@ namespace WebApiPatterns.Application
                     _logger.LogInformation("20 секунд еще не прошло, создаем!!");
 
                     src.Cancel();
-
 
                     var accident = new Accident(Guid.NewGuid(), AccidentType.Type2, criticalEvent, ce);
 
@@ -78,7 +76,6 @@ namespace WebApiPatterns.Application
 
         public async void CreateIncidentThree(CriticalEvent criticalEvent)
         {
-
             var sourceEventDate = DateTime.Now;
 
             int secondsToWait = 30;
@@ -127,7 +124,7 @@ namespace WebApiPatterns.Application
             }
             catch (OperationCanceledException ex)
             {
-                _logger.LogInformation("Событие пришло, дефолтное событие не создаётся");
+                _logger.LogInformation("Событие пришло, дефолтный инцидент не создаётся");
             }
 
         }
