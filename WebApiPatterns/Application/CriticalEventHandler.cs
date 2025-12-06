@@ -1,5 +1,5 @@
 ﻿using System.Collections.Concurrent;
-using System.ComponentModel;
+using System.Reflection.Metadata;
 using WebApiPatterns.Application.Dtos;
 
 namespace WebApiPatterns.Application
@@ -14,9 +14,10 @@ namespace WebApiPatterns.Application
             typesHandlers[CriticalEventType.type1] = CreateIncidentOne;
             typesHandlers[CriticalEventType.type2] = CreateIncidentTwo;
             typesHandlers[CriticalEventType.type3] = CreateIncidentThree;
-
-
         }
+
+        private readonly object _lockObject = new object();
+
 
         private static readonly ConcurrentDictionary<CriticalEventType, Action<CriticalEvent>> typesHandlers = new();
 
@@ -51,12 +52,13 @@ namespace WebApiPatterns.Application
                     _logger.LogInformation("Создан инцидент типа 2 на основе событий с id = " + accident.CriticalEventFirst.id.ToString() + " " + accident.CriticalEventSecond!.id.ToString());
                 }
 
-                typesHandlers[CriticalEventType.type1] -= LocalHandler;
-                typesHandlers[CriticalEventType.type1] += CreateIncidentOne;
+                RemoveTypeHandler(CriticalEventType.type1, LocalHandler);
+                AddTypeHandler(CriticalEventType.type1, CreateIncidentOne);
             }
 
-            typesHandlers[CriticalEventType.type1] += LocalHandler;
-            typesHandlers[CriticalEventType.type1] -= CreateIncidentOne;
+            AddTypeHandler(CriticalEventType.type1, LocalHandler);
+            RemoveTypeHandler(CriticalEventType.type1, CreateIncidentOne);
+            
 
 
         }
@@ -77,15 +79,39 @@ namespace WebApiPatterns.Application
                     _logger.LogInformation("Создан инцидент типа 3 на основе событий с id = " + accident.CriticalEventFirst.id.ToString() + " " + accident.CriticalEventSecond!.id.ToString());
                 }
 
-                typesHandlers[CriticalEventType.type2] -= LocalHandler;
-                typesHandlers[CriticalEventType.type2] += CreateIncidentTwo;
+                RemoveTypeHandler(CriticalEventType.type2, LocalHandler);
+                AddTypeHandler(CriticalEventType.type2, CreateIncidentTwo);
             }
 
-            typesHandlers[CriticalEventType.type2] += LocalHandler;
-            typesHandlers[CriticalEventType.type2] -= CreateIncidentTwo;
+            AddTypeHandler(CriticalEventType.type2, LocalHandler);
+            RemoveTypeHandler(CriticalEventType.type2, CreateIncidentTwo);
         }
 
 
+        private void AddTypeHandler(CriticalEventType type, Action<CriticalEvent> handler)
+        {
+            lock (_lockObject)
+            {
+                typesHandlers[type] += handler;
+            }
+
+        }
+        private void RemoveTypeHandler(CriticalEventType type, Action<CriticalEvent> handler)
+        {
+            lock (_lockObject)
+            {
+                if (handler is not null &&
+                    typesHandlers.TryGetValue(type, out var existingHandlers) &&
+                    existingHandlers is not null &&
+                    existingHandlers.GetInvocationList().Any(d => d.Equals(handler)))
+                {
+                    var updatedHandlers = existingHandlers - handler;
+                    typesHandlers[type] = updatedHandlers!;
+                }
+            }
+
+        }
+       
 
     }
 }

@@ -23,6 +23,9 @@ namespace WebApiPatterns.Controllers
         }
 
         [HttpPost("CriticalEvent")]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status202Accepted)]
         public async Task<ActionResult> ReceiveCriticalEvent(CriticalEventRequest criticalEvent)
         {
             var criticalEventWithId = criticalEvent with { id = Guid.NewGuid()};
