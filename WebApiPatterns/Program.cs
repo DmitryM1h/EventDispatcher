@@ -27,6 +27,7 @@ builder.Services.AddScoped<INotificator, EmailSender>();
 builder.Services.AddScoped<INotificator, WebApplicationSender>();
 builder.Services.AddScoped<NotificationDispatcher>();
 builder.Services.AddScoped<NotificationValidator>();
+builder.Services.AddSingleton<CriticalEventHandler>();
 
 var app = builder.Build();
 

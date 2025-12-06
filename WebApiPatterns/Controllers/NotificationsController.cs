@@ -7,10 +7,10 @@ namespace WebApiPatterns.Controllers
 
     [ApiController]
     [Route("[controller]")]
-    public class NotificationsController(NotificationDispatcher dispatcher) : ControllerBase
+    public class NotificationsController(NotificationDispatcher dispatcher, CriticalEventHandler handler) : ControllerBase
     {
 
-        [HttpPost]
+        [HttpPost("Notification")]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status202Accepted)]
@@ -20,6 +20,23 @@ namespace WebApiPatterns.Controllers
             var response = await dispatcher.SendAsync(notification);
 
             return Accepted(response);
+        }
+
+        [HttpPost("CriticalEvent")]
+        public async Task<ActionResult> ReceiveCriticalEvent(CriticalEventRequest criticalEvent)
+        {
+            var criticalEventWithId = criticalEvent with { id = Guid.NewGuid()};
+
+            if (!Enum.IsDefined(typeof(CriticalEventType), criticalEvent.Type))
+            {
+                return BadRequest(new
+                {
+                    Error = $"Некорректный тип события: {criticalEvent.Type}"
+                });
+            }
+
+            handler.ProcessCriticalEvent(criticalEventWithId);
+            return Accepted(criticalEventWithId);
         }
 
     }

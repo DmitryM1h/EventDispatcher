@@ -5,17 +5,17 @@ using WebApiPatterns.Validators;
 
 namespace WebApiPatterns.Application
 {
-    public class NotificationDispatcher(IEnumerable<INotificator> notificationStategies,
-                                        NotificationValidator validator,
-                                        ILogger<NotificationDispatcher> logger)
+    public class NotificationDispatcher(IEnumerable<INotificator> _notificators,
+                                        NotificationValidator _validator,
+                                        ILogger<NotificationDispatcher> _logger)
     {
         public async Task<IEnumerable<NotificationResponse>> SendAsync(NotificationRequest notification)
         {
             try
             {
-                validator.ThrowIfInvalid(notification);
+                _validator.ThrowIfInvalid(notification);
 
-                var notificators = notificationStategies.Where(t => t.CanHandle(notification.Type));
+                var notificators = _notificators.Where(t => t.CanHandle(notification.Type));
 
                 var tasks = notificators.Select(t => t.SendNotificationAsync(notification));
 
@@ -25,7 +25,7 @@ namespace WebApiPatterns.Application
             }
             catch(FailedToValidateNotification ex) 
             {
-                logger.LogError("Failed to send notification {@exceptionInfo}", new { notificationType = notification.Type, exceptionInfo = ex.ToString()});
+                _logger.LogError("Failed to send notification {@exceptionInfo}", new { notificationType = notification.Type, exceptionInfo = ex.ToString()});
 
                 throw;
             }
