@@ -143,15 +143,11 @@ namespace WebApiPatterns.Application
         }
         private void RemoveTypeHandler(CriticalEventType type, Action<CriticalEvent> handler)
         {
-            
-                if (handler is not null &&
-                    typesHandlers.TryGetValue(type, out var existingHandlers) &&
-                    existingHandlers is not null &&
-                    existingHandlers.GetInvocationList().Any(d => d.Equals(handler)))
-                {
-                    var updatedHandlers = existingHandlers - handler;
-                    typesHandlers[type] = updatedHandlers!;
-                }
+            typesHandlers.TryGetValue(type, out var existingHandlers);
+
+            var updatedHandlers = existingHandlers - handler;
+
+            typesHandlers[type] = updatedHandlers!;
         }
        
 
