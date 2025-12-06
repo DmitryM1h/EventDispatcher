@@ -1,5 +1,4 @@
 ﻿using System.Collections.Concurrent;
-using System.Reflection.Metadata;
 using System.Threading.Channels;
 using WebApiPatterns.Application.Dtos;
 
@@ -41,17 +40,23 @@ namespace WebApiPatterns.Application
             _logger.LogInformation("Создан инцидент типа 1 на основе события с id " + criticalEvent.id.ToString());
 
         }
-        public void CreateIncidentTwo(CriticalEvent criticalEvent)
+        public async void CreateIncidentTwo(CriticalEvent criticalEvent)
         {
 
             var sourceEventDate = DateTime.Now;
             int secondsToWait = 20;
+
+            CancellationTokenSource src = new CancellationTokenSource();
+            var token = src.Token;
 
             async void LocalHandler(CriticalEvent ce)
             {
                 if (DateTime.Now - sourceEventDate < TimeSpan.FromSeconds(secondsToWait))
                 {
                     _logger.LogInformation("20 секунд еще не прошло, создаем!!");
+
+                    src.Cancel();
+
 
                     var accident = new Accident(Guid.NewGuid(), AccidentType.Type2, criticalEvent, ce);
 
@@ -66,23 +71,28 @@ namespace WebApiPatterns.Application
 
             AddTypeHandler(CriticalEventType.type1, LocalHandler);
             RemoveTypeHandler(CriticalEventType.type1, CreateIncidentOne);
-            
 
+            await WaitToCreateIncident(criticalEvent, secondsToWait, token);
 
         }
 
-        public void CreateIncidentThree(CriticalEvent criticalEvent)
+        public async void CreateIncidentThree(CriticalEvent criticalEvent)
         {
 
             var sourceEventDate = DateTime.Now;
 
             int secondsToWait = 30;
 
+            CancellationTokenSource src = new CancellationTokenSource();
+            var token = src.Token;
+
             async void LocalHandler(CriticalEvent ce)
             {
                 if (DateTime.Now - sourceEventDate < TimeSpan.FromSeconds(secondsToWait))
                 {
                     _logger.LogInformation("30 секунд еще не прошло, создаем!!");
+
+                    src.Cancel();
 
                     var accident = new Accident(Guid.NewGuid(), AccidentType.Type3, criticalEvent, ce);
 
@@ -97,6 +107,29 @@ namespace WebApiPatterns.Application
 
             AddTypeHandler(CriticalEventType.type2, LocalHandler);
             RemoveTypeHandler(CriticalEventType.type2, CreateIncidentTwo);
+
+            await WaitToCreateIncident(criticalEvent, secondsToWait, token);
+        }
+
+
+        private async Task WaitToCreateIncident(CriticalEvent criticalEvent, int secondsToWait, CancellationToken token)
+        {
+            try
+            {
+                await Task.Delay(TimeSpan.FromSeconds(secondsToWait), token);
+
+                _logger.LogInformation("Не дождались следующего события, создаем дефолтный инцидент");
+                var accidentType = CriticalEventType.type3 == criticalEvent.Type ? AccidentType.Type2 : AccidentType.Type1;
+                var accident = new Accident(Guid.NewGuid(), accidentType, criticalEvent);
+                await _processedEvents.Writer.WriteAsync(accident);
+
+                _logger.LogInformation($"Создан инцидент типа {(int)criticalEvent.Type + 1}  на основе события с id = " + criticalEvent.id.ToString());
+            }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogInformation("Событие пришло, дефолтное событие не создаётся");
+            }
+
         }
 
 
@@ -119,8 +152,6 @@ namespace WebApiPatterns.Application
                     var updatedHandlers = existingHandlers - handler;
                     typesHandlers[type] = updatedHandlers!;
                 }
-            
-
         }
        
 
