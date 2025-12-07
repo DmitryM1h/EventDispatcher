@@ -37,6 +37,8 @@ builder.Services.AddSingleton(factory =>
     return channel;
 });
 
+builder.Services.AddScoped<JobMediator>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
