@@ -12,9 +12,6 @@ namespace WebApiPatterns.Application
             _logger = logger;
             _processedEvents = processedVents;
 
-            typesHandlers[CriticalEventType.type1] = CreateIncidentOne;
-            typesHandlers[CriticalEventType.type2] = CreateIncidentTwo;
-            typesHandlers[CriticalEventType.type3] = CreateIncidentThree;
         }
 
         public readonly Channel<Accident> _processedEvents; // Обработанные события пишутся и сюда в очередь и фоновая задача добавляет в базу
@@ -29,9 +26,25 @@ namespace WebApiPatterns.Application
             CriticalEvent criticalEvent = new(request.id, request.Description, request.Type, DateTime.Now);
             _logger.LogInformation("В обработку получено критическое событие, id = " + criticalEvent.id.ToString() + " типа " + criticalEvent.Type);
 
-            Action<CriticalEvent> handler = typesHandlers[criticalEvent.Type];
+            typesHandlers.TryGetValue(criticalEvent.Type, out var handler);
 
-            handler(criticalEvent);
+            switch(criticalEvent.Type)
+            {
+                case CriticalEventType.type1:
+                    if (handler is not null) handler(criticalEvent);
+                    else CreateIncidentOne(criticalEvent);
+                    break;
+
+                case CriticalEventType.type2:
+                    if (handler is not null) handler(criticalEvent);
+                    else CreateIncidentTwo(criticalEvent);
+                    break;
+
+                case CriticalEventType.type3:
+                    CreateIncidentThree(criticalEvent);
+                    break;
+            }
+
         }
 
         public void CreateIncidentOne(CriticalEvent criticalEvent)
@@ -64,11 +77,9 @@ namespace WebApiPatterns.Application
                 }
 
                 RemoveTypeHandler(CriticalEventType.type1, LocalHandler);
-                AddTypeHandler(CriticalEventType.type1, CreateIncidentOne);
             }
 
             AddTypeHandler(CriticalEventType.type1, LocalHandler);
-            RemoveTypeHandler(CriticalEventType.type1, CreateIncidentOne);
 
             await WaitToCreateIncident(criticalEvent, secondsToWait, token);
 
@@ -99,11 +110,9 @@ namespace WebApiPatterns.Application
                 }
 
                 RemoveTypeHandler(CriticalEventType.type2, LocalHandler);
-                AddTypeHandler(CriticalEventType.type2, CreateIncidentTwo);
             }
 
             AddTypeHandler(CriticalEventType.type2, LocalHandler);
-            RemoveTypeHandler(CriticalEventType.type2, CreateIncidentTwo);
 
             await WaitToCreateIncident(criticalEvent, secondsToWait, token);
         }
@@ -132,11 +141,17 @@ namespace WebApiPatterns.Application
 
         private void AddTypeHandler(CriticalEventType type, Action<CriticalEvent> handler)
         {
-            lock (_lockObject)
-            {
-                typesHandlers[type] += handler; // += с делегатами непотокобезопасен?
-            }
+            typesHandlers.TryGetValue(type, out var existingHandlers);
 
+            if (existingHandlers is not null)
+            {
+                existingHandlers += handler;
+                typesHandlers[type] = existingHandlers;
+            }
+            else
+            {
+                typesHandlers[type] = handler;
+            }
         }
         private void RemoveTypeHandler(CriticalEventType type, Action<CriticalEvent> handler)
         {
