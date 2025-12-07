@@ -6,7 +6,7 @@ namespace WebApiPatterns.Application
 {
     public class CriticalEventHandler
     {
-        ILogger<CriticalEventHandler> _logger;
+        private readonly ILogger<CriticalEventHandler> _logger;
         public CriticalEventHandler(ILogger<CriticalEventHandler> logger, Channel<Accident> processedVents)
         {
             _logger = logger;
@@ -14,10 +14,7 @@ namespace WebApiPatterns.Application
 
         }
 
-        public readonly Channel<Accident> _processedEvents; // Обработанные события пишутся и сюда в очередь и фоновая задача добавляет в базу
-
-        private readonly object _lockObject = new();
-
+        private readonly Channel<Accident> _processedEvents;
 
         private static readonly ConcurrentDictionary<CriticalEventType, Action<CriticalEvent>> typesHandlers = new();
 
@@ -60,6 +57,13 @@ namespace WebApiPatterns.Application
 
             CancellationTokenSource src = new CancellationTokenSource();
             var token = src.Token;
+         
+            AddTypeHandler(CriticalEventType.type1, LocalHandler);
+
+            await WaitToCreateDefaultIncidentAsync(criticalEvent, secondsToWait, token);
+
+            RemoveTypeHandler(CriticalEventType.type1, LocalHandler);
+
 
             async void LocalHandler(CriticalEvent ce)
             {
@@ -75,14 +79,7 @@ namespace WebApiPatterns.Application
 
                     _logger.LogInformation("Создан инцидент типа 2 на основе событий с id = " + accident.CriticalEventFirst.id.ToString() + " " + accident.CriticalEventSecond!.id.ToString());
                 }
-
-                RemoveTypeHandler(CriticalEventType.type1, LocalHandler);
             }
-
-            AddTypeHandler(CriticalEventType.type1, LocalHandler);
-
-            await WaitToCreateIncident(criticalEvent, secondsToWait, token);
-
         }
 
         public async void CreateIncidentThree(CriticalEvent criticalEvent)
@@ -93,6 +90,12 @@ namespace WebApiPatterns.Application
 
             CancellationTokenSource src = new CancellationTokenSource();
             var token = src.Token;
+
+            AddTypeHandler(CriticalEventType.type2, LocalHandler);
+
+            await WaitToCreateDefaultIncidentAsync(criticalEvent, secondsToWait, token);
+
+            RemoveTypeHandler(CriticalEventType.type2, LocalHandler);
 
             async void LocalHandler(CriticalEvent ce)
             {
@@ -109,16 +112,11 @@ namespace WebApiPatterns.Application
                     _logger.LogInformation("Создан инцидент типа 3 на основе событий с id = " + accident.CriticalEventFirst.id.ToString() + " " + accident.CriticalEventSecond!.id.ToString());
                 }
 
-                RemoveTypeHandler(CriticalEventType.type2, LocalHandler);
             }
-
-            AddTypeHandler(CriticalEventType.type2, LocalHandler);
-
-            await WaitToCreateIncident(criticalEvent, secondsToWait, token);
         }
 
 
-        private async Task WaitToCreateIncident(CriticalEvent criticalEvent, int secondsToWait, CancellationToken token)
+        private async Task WaitToCreateDefaultIncidentAsync(CriticalEvent criticalEvent, int secondsToWait, CancellationToken token)
         {
             try
             {
