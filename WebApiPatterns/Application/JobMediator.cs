@@ -1,5 +1,6 @@
 ﻿using System.Data;
 using System.Reflection;
+using WebApiPatterns.Exceptions;
 using WebApiPatterns.Interfaces;
 
 namespace WebApiPatterns.Application
@@ -14,14 +15,21 @@ namespace WebApiPatterns.Application
         {
             var type = command.GetType();
 
-            var handler = Assembly.GetExecutingAssembly()
+            var handlers = Assembly.GetExecutingAssembly()
                         .DefinedTypes
                         .Where(t => t.IsClass)
                         .Where(t =>
                             t.ImplementedInterfaces
                             .Any(x => x.Name == typeof(IJobHandler<>).Name && x.GenericTypeArguments.Contains(type))
-                         )
-                        .FirstOrDefault() ?? throw new ArgumentOutOfRangeException($"Unable to resolve for command {type.Name}");
+                         ).ToList();
+
+            if(handlers.Count == 0)
+                throw new HandlerNotFoundException($"Unable to resolve for command {type.Name}");
+
+            if (handlers.Count > 1)
+                throw new MultipleHandlersException($"Multiple handlers for command {type.Name}");
+
+            var handler = handlers.First();
 
             var handlertype = handler.AsType();
 
@@ -31,7 +39,7 @@ namespace WebApiPatterns.Application
 
             var method = interfaceType.GetMethod("ExecuteJob");
 
-            var task = method!.Invoke(handlerInstance, null) as Task;
+            method!.Invoke(handlerInstance, null);
         }
     }
 }

@@ -21,7 +21,7 @@ namespace WebApiPatterns.Application
         public void ProcessCriticalEvent(CriticalEventRequest request)
         {
             CriticalEvent criticalEvent = new(request.id, request.Description, request.Type, DateTime.Now);
-            _logger.LogInformation("В обработку получено критическое событие, id = " + criticalEvent.id.ToString() + " типа " + criticalEvent.Type);
+            _logger.LogInformation("В обработку получено критическое событие: {event}", new {id = criticalEvent.id.ToString(), type = criticalEvent.Type});
 
             typesHandlers.TryGetValue(criticalEvent.Type, out var handler);
 
@@ -47,7 +47,7 @@ namespace WebApiPatterns.Application
         private void CreateIncidentOne(CriticalEvent criticalEvent)
         {
             var accident = new Accident(Guid.NewGuid(), AccidentType.Type1, criticalEvent);
-            _logger.LogInformation("Создан инцидент типа 1 на основе события с id " + criticalEvent.id.ToString());
+            _logger.LogInformation("Создан инцидент типа 1 на основе события: {event} ", new {id = criticalEvent.id.ToString()});
 
         }
 
@@ -57,7 +57,7 @@ namespace WebApiPatterns.Application
             var sourceEventDate = DateTime.Now;
             int secondsToWait = 20;
 
-            CancellationTokenSource src = new CancellationTokenSource();
+            CancellationTokenSource src = new();
             var token = src.Token;
          
             AddTypeHandler(CriticalEventType.type1, LocalHandler);
@@ -65,7 +65,6 @@ namespace WebApiPatterns.Application
             await WaitToCreateDefaultIncidentAsync(criticalEvent, secondsToWait, token);
 
             RemoveTypeHandler(CriticalEventType.type1, LocalHandler);
-
 
             async void LocalHandler(CriticalEvent ce)
             {
@@ -79,7 +78,7 @@ namespace WebApiPatterns.Application
 
                     await _processedEvents.Writer.WriteAsync(accident);
 
-                    _logger.LogInformation("Создан инцидент типа 2 на основе событий с id = " + accident.CriticalEventFirst.id.ToString() + " " + accident.CriticalEventSecond!.id.ToString());
+                    _logger.LogInformation("Создан инцидент типа 2 на основе событий {events}" , new { firstEvent = accident.CriticalEventFirst.id.ToString(), secondEvent = accident.CriticalEventSecond!.id.ToString()});
                 }
             }
         }
@@ -90,7 +89,7 @@ namespace WebApiPatterns.Application
 
             int secondsToWait = 30;
 
-            CancellationTokenSource src = new CancellationTokenSource();
+            CancellationTokenSource src = new();
             var token = src.Token;
 
             AddTypeHandler(CriticalEventType.type2, LocalHandler);
@@ -98,7 +97,6 @@ namespace WebApiPatterns.Application
             await WaitToCreateDefaultIncidentAsync(criticalEvent, secondsToWait, token);
 
             RemoveTypeHandler(CriticalEventType.type2, LocalHandler);
-
 
             async void LocalHandler(CriticalEvent ce)
             {
@@ -112,7 +110,7 @@ namespace WebApiPatterns.Application
 
                     await _processedEvents.Writer.WriteAsync(accident);
 
-                    _logger.LogInformation("Создан инцидент типа 3 на основе событий с id = " + accident.CriticalEventFirst.id.ToString() + " " + accident.CriticalEventSecond!.id.ToString());
+                    _logger.LogInformation("Создан инцидент типа 3 на основе событий {events}", new { firstEvent = accident.CriticalEventFirst.id.ToString(), secondEvent = accident.CriticalEventSecond!.id.ToString() });
                 }
 
             }
@@ -133,7 +131,7 @@ namespace WebApiPatterns.Application
 
                 await _processedEvents.Writer.WriteAsync(accident);
 
-                _logger.LogInformation($"Создан инцидент типа {(int)criticalEvent.Type + 1}  на основе события с id = " + criticalEvent.id.ToString());
+                _logger.LogInformation("Создан инцидент на основе событий {accident}", new {accidentType, firstEvent = accident.CriticalEventFirst.id.ToString()});
             }
             catch (OperationCanceledException)
             {

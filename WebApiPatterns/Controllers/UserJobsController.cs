@@ -11,6 +11,9 @@ namespace WebApiPatterns.Controllers
     {
 
         [HttpPost("ExportData")]
+        [ProducesResponseType(StatusCodes.Status202Accepted)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         //[Authorize]
         public async Task<ActionResult> ExportDataToExternalSystem([FromBody] string description)
         {
@@ -21,6 +24,20 @@ namespace WebApiPatterns.Controllers
             return Accepted();
         }
 
+
+        [HttpPost("GenerateReport")]
+        [ProducesResponseType(StatusCodes.Status202Accepted)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        //[Authorize]
+        public async Task<ActionResult> GenerateReport([FromBody] string description)
+        {
+            var command = new GenerateReportCommand();
+
+            await _jobMediator.ReceiveCommand(command);
+
+            return Accepted();
+        }
 
     }
 }

@@ -71,6 +71,10 @@ app.Use(async (ctx, next) =>
         {
             FailedToValidateNotification => StatusCodes.Status400BadRequest,
 
+            HandlerNotFoundException => StatusCodes.Status500InternalServerError,
+
+            MultipleHandlersException => StatusCodes.Status500InternalServerError,
+
             _ => StatusCodes.Status500InternalServerError
 
         };
