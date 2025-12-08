@@ -39,9 +39,7 @@ namespace WebApiPatterns.Controllers
         {
             string initiator = "TestUser";
 
-            var token = ExportDataToExternalSystem.GetUsersToken(initiator);
-
-            await token.CancelAsync();
+            ExportDataToExternalSystem.CancelTask(initiator);
 
             return Ok();
 

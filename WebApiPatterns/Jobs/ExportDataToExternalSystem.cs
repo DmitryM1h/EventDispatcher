@@ -15,13 +15,7 @@ namespace WebApiPatterns.Jobs
 
         private static ConcurrentDictionary<string, CancellationTokenSource> activeTasks = new();
 
-        public static CancellationTokenSource GetUsersToken(string inititor) => activeTasks[inititor];
-
-        public void ThrowIfTaskCancelled()
-        {
-            activeTasks[Initiator].Token.ThrowIfCancellationRequested();
-        }
-
+       
         public ExportDataToExternalSystem(IServiceProvider serviceProvider)
         {
             Initiator = "TestUser";
@@ -30,14 +24,77 @@ namespace WebApiPatterns.Jobs
 
             var src = new CancellationTokenSource();
 
-            src.Token.Register(async () => await NotifyCancel());
+            src.Token.Register(async () => { await NotifyCancel(); Console.WriteLine("Токен мертв"); });
 
             activeTasks[Initiator] = src;
         }
+
         public async Task ExecuteJob(ExportDataCommand command)
         {
-            // Если один пользователь уже запустил эту задачу, то не запускать еще раз?
-            // Добавить возможность отменить задачу
+
+            await foreach (var _ in ExecuteJobAsync(command))
+            {
+                await NotifyProgress();
+
+                await Task.Delay(20);
+
+                ThrowIfTaskCancelled();
+            }
+        }
+
+        private async IAsyncEnumerable<int> ExecuteJobAsync(ExportDataCommand command)
+        {
+
+            yield return 1;
+
+            await Task.Delay(TimeSpan.FromSeconds(10));
+            ProgressPercent = 50;
+
+            yield return 1;
+
+
+            await Task.Delay(TimeSpan.FromSeconds(5));
+            ProgressPercent = 75;
+
+            yield return 1;
+
+
+            await Task.Delay(TimeSpan.FromSeconds(5));
+            ProgressPercent = 100;
+
+            yield return 1;
+
+            Console.WriteLine("Export data completed");
+        }
+
+
+        private async Task NotifyProgress()
+        {
+            await HubContext.Clients.All.SendAsync("ExportDataTaskProgress", new {Initiator, ProgressPercent});
+        }
+        private async Task NotifyCancel()
+        {
+            await HubContext.Clients.All.SendAsync("ExportDataTaskProgress", "Задача отменена пользователем");
+        }
+
+
+        public static void CancelTask(string inititor)
+        {
+            activeTasks[inititor].Cancel();
+
+            activeTasks[inititor].Dispose();
+        }
+
+        public void ThrowIfTaskCancelled()
+        {
+            activeTasks[Initiator].Token.ThrowIfCancellationRequested();
+        }
+
+
+        [Obsolete]
+        private async Task ExecuteJobObsolete(ExportDataCommand command)
+        {
+
             await NotifyProgress();
 
             await Task.Delay(TimeSpan.FromSeconds(10));
@@ -58,15 +115,5 @@ namespace WebApiPatterns.Jobs
 
             Console.WriteLine("Export data completed");
         }
-
-        private async Task NotifyProgress()
-        {
-            await HubContext.Clients.All.SendAsync("ExportDataTaskProgress", new {Initiator, ProgressPercent});
-        }
-        private async Task NotifyCancel()
-        {
-            await HubContext.Clients.All.SendAsync("ExportDataTaskProgress", "Задача отменена пользователем");
-        }
-
     }
 }
