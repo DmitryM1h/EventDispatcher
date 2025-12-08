@@ -6,6 +6,8 @@ using WebApiPatterns.Jobs.Commands;
 
 namespace WebApiPatterns.Controllers
 {
+    public record ApplicationUserCommand(string UserName, string CommandDescription);
+
 
     [ApiController]
     [Route("[controller]")]
@@ -17,11 +19,11 @@ namespace WebApiPatterns.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         //[Authorize]
-        public async Task<ActionResult> ExportDataTask([FromBody] string description)
+        public async Task<ActionResult> ExportDataTask([FromBody] ApplicationUserCommand userCommand)
         {
             long start = Stopwatch.GetTimestamp();
 
-            var command = new ExportDataCommand(description);
+            var command = new ExportDataCommand(userCommand.UserName, userCommand.CommandDescription);
 
             await _jobMediator.ReceiveCommand(command);
 

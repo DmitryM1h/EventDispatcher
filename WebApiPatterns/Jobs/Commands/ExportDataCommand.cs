@@ -6,8 +6,9 @@ namespace WebApiPatterns.Jobs.Commands
     {
         public string Description { get; init; } = null!;
 
-        public ExportDataCommand(string description)
+        public ExportDataCommand(string username, string description)
         {
+            base.UserName = username;
             Description = description;
         }
     }

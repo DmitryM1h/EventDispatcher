@@ -20,7 +20,6 @@ namespace WebApiPatterns.Application
             if (_cachedHandlers.TryGetValue(type, out var _handler))
             {
                 handler = _handler;
-                return;
             }
             else
             {
@@ -47,7 +46,7 @@ namespace WebApiPatterns.Application
 
             var interfaceType = typeof(IJobHandler<>).MakeGenericType(type);
 
-            var handlerInstance = Activator.CreateInstance(handlertype, serviceProvider);
+            var handlerInstance = Activator.CreateInstance(handlertype, [serviceProvider, command.UserName]);
 
             var method = interfaceType.GetMethod("ExecuteJob");
 

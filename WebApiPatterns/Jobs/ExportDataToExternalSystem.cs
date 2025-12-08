@@ -1,63 +1,29 @@
-﻿using Microsoft.AspNetCore.SignalR;
-using System.Collections.Concurrent;
-using WebApiPatterns.Application;
-using WebApiPatterns.Interfaces;
+﻿using WebApiPatterns.Interfaces;
 using WebApiPatterns.Jobs.Commands;
 
 namespace WebApiPatterns.Jobs
 {
-    public class ExportDataToExternalSystem : IJobHandler<ExportDataCommand>
+    public class ExportDataToExternalSystem : JobHandlerBase<ExportDataCommand>, IJobHandler<ExportDataCommand>
     {
-        private string Initiator { get; init; } = null!;
-        private int ProgressPercent { get; set; }
+        public ExportDataToExternalSystem(IServiceProvider serviceProvider, string initiator) : base(serviceProvider, initiator) { }
 
-        private readonly IHubContext<NotificationHub> HubContext;
-
-        private static ConcurrentDictionary<string, CancellationTokenSource> activeTasks = new();
-
-       
-        public ExportDataToExternalSystem(IServiceProvider serviceProvider)
-        {
-            Initiator = "TestUser";
-            ProgressPercent = 0;
-            HubContext = serviceProvider.GetRequiredService<IHubContext<NotificationHub>>();
-
-            var src = new CancellationTokenSource();
-
-            src.Token.Register(async () => { await NotifyCancel(); Console.WriteLine("Токен мертв"); });
-
-            activeTasks[Initiator] = src;
-        }
-
-        public async Task ExecuteJob(ExportDataCommand command)
+        protected override async IAsyncEnumerable<int> ExecuteJobAsync(ExportDataCommand command)
         {
 
-            await foreach (var _ in ExecuteJobAsync(command))
-            {
-                await NotifyProgress();
-
-                await Task.Delay(20);
-
-                ThrowIfTaskCancelled();
-            }
-        }
-
-        private async IAsyncEnumerable<int> ExecuteJobAsync(ExportDataCommand command)
-        {
+            await Task.Delay(TimeSpan.FromSeconds(5));
+            ProgressPercent = 25;
 
             yield return 1;
 
-            await Task.Delay(TimeSpan.FromSeconds(10));
+            await Task.Delay(TimeSpan.FromSeconds(5));
             ProgressPercent = 50;
 
             yield return 1;
-
 
             await Task.Delay(TimeSpan.FromSeconds(5));
             ProgressPercent = 75;
 
             yield return 1;
-
 
             await Task.Delay(TimeSpan.FromSeconds(5));
             ProgressPercent = 100;
@@ -68,27 +34,7 @@ namespace WebApiPatterns.Jobs
         }
 
 
-        private async Task NotifyProgress()
-        {
-            await HubContext.Clients.All.SendAsync("ExportDataTaskProgress", new {Initiator, ProgressPercent});
-        }
-        private async Task NotifyCancel()
-        {
-            await HubContext.Clients.All.SendAsync("ExportDataTaskProgress", "Задача отменена пользователем");
-        }
-
-
-        public static void CancelTask(string inititor)
-        {
-            activeTasks[inititor].Cancel();
-
-            activeTasks[inititor].Dispose();
-        }
-
-        public void ThrowIfTaskCancelled()
-        {
-            activeTasks[Initiator].Token.ThrowIfCancellationRequested();
-        }
+     
 
 
         [Obsolete]
