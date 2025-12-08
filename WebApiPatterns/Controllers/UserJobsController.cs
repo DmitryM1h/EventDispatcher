@@ -52,11 +52,11 @@ namespace WebApiPatterns.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         //[Authorize]
-        public async Task<ActionResult> GenerateReport([FromBody] string description)
+        public async Task<ActionResult> GenerateReport([FromBody] ApplicationUserCommand userCommand)
         {
             long start = Stopwatch.GetTimestamp();
             
-            var command = new GenerateReportCommand(description);
+            var command = new GenerateReportCommand(userCommand.CommandDescription, userCommand.UserName);
 
             await _jobMediator.ReceiveCommand(command);
 

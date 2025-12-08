@@ -50,7 +50,7 @@ namespace WebApiPatterns.Application
 
             var method = interfaceType.GetMethod("ExecuteJob");
 
-            var task = () => Task.Run(() => method!.Invoke(handlerInstance,[command]));
+            var task = () => Task.Run(() => method!.Invoke(handlerInstance, [command]));
 
             _ = task();
 

@@ -14,11 +14,15 @@ namespace WebApiPatterns.Jobs
 
         private static ConcurrentDictionary<string, CancellationTokenSource> activeTasks = new();
 
+        ILogger<JobHandlerBase<ICommand>> _logger;
+
         protected JobHandlerBase(IServiceProvider serviceProvider, string initiator)
         {
             Initiator = initiator;
             ProgressPercent = 0;
             HubContext = serviceProvider.GetRequiredService<IHubContext<NotificationHub>>();
+
+            _logger = serviceProvider.GetRequiredService<ILogger<JobHandlerBase<ICommand>>>();
 
             var src = new CancellationTokenSource();
 
@@ -31,13 +35,21 @@ namespace WebApiPatterns.Jobs
 
         public async Task ExecuteJob(ICommand command)
         {
-            await foreach (var _ in ExecuteJobAsync(command))
+            try
             {
-                await NotifyProgress();
+                await foreach (var _ in ExecuteJobAsync(command))
+                {
+                    await NotifyProgress();
 
-                await Task.Delay(20);
+                    await Task.Delay(20);
 
-                ThrowIfTaskCancelled();
+                    ThrowIfTaskCancelled();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogCritical("Application job failed {details}", ex.ToString());
+                await NotifyError();
             }
 
             activeTasks[Initiator].Dispose();
@@ -51,9 +63,12 @@ namespace WebApiPatterns.Jobs
         }
         protected async Task NotifyCancel()
         {
-            await HubContext.Clients.All.SendAsync("ExportDataTaskProgress", "Задача отменена пользователем");
+            await HubContext.Clients.All.SendAsync("ExportDataTaskProgress", $"Задача отменена пользователем {Initiator}");
         }
-
+        protected async Task NotifyError()
+        {
+            await HubContext.Clients.All.SendAsync("ExportDataTaskProgress", $"Задача завершена с ошибкой. Инциатор: {Initiator}");
+        }
 
         public static void CancelTask(string initiator)
         {

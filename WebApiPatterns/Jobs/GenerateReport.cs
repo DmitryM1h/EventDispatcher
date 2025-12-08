@@ -3,13 +3,13 @@ using WebApiPatterns.Jobs.Commands;
 
 namespace WebApiPatterns.Jobs
 {
-    public class GenerateReport : IJobHandler<GenerateReportCommand>
+    public class GenerateReport : JobHandlerBase<GenerateReportCommand>, IJobHandler<GenerateReportCommand>
     {
-        public async Task ExecuteJob(GenerateReportCommand command)
+        public GenerateReport(IServiceProvider serviceProvider, string initiator) : base(serviceProvider, initiator) { }
+       
+        protected override IAsyncEnumerable<int> ExecuteJobAsync(GenerateReportCommand command)
         {
-            // Задача может занимать часы времени. т.е. что то вычислительное и долгое
-            await Task.Delay(TimeSpan.FromSeconds(10));
+            throw new NotImplementedException();
         }
-
     }
 }

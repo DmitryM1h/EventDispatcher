@@ -6,8 +6,9 @@ namespace WebApiPatterns.Jobs.Commands
     {
         public string Description { get; init; } = null!;
 
-        public GenerateReportCommand(string description)
+        public GenerateReportCommand(string description, string initiator)
         {
+            base.UserName = initiator;
             Description = description;
         }
     }
