@@ -1,13 +1,12 @@
 ﻿using System.Collections.Concurrent;
 using System.Data;
-using System.Diagnostics;
 using System.Reflection;
 using WebApiPatterns.Exceptions;
 using WebApiPatterns.Interfaces;
 
 namespace WebApiPatterns.Application
 {
-    public class JobMediator
+    public class JobMediator(IServiceProvider serviceProvider)
     {
         private static readonly ConcurrentDictionary<Type, Func<object>> _cachedHandlers = new();
 
@@ -42,7 +41,7 @@ namespace WebApiPatterns.Application
 
             var interfaceType = typeof(IJobHandler<>).MakeGenericType(type);
 
-            var handlerInstance = Activator.CreateInstance(handlertype);
+            var handlerInstance = Activator.CreateInstance(handlertype, serviceProvider);
 
             var method = interfaceType.GetMethod("ExecuteJob");
 

@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 using WebApiPatterns.Application;
+using WebApiPatterns.Jobs;
 using WebApiPatterns.Jobs.Commands;
 
 namespace WebApiPatterns.Controllers
@@ -16,7 +17,7 @@ namespace WebApiPatterns.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         //[Authorize]
-        public async Task<ActionResult> ExportDataToExternalSystem([FromBody] string description)
+        public async Task<ActionResult> ExportDataTask([FromBody] string description)
         {
             long start = Stopwatch.GetTimestamp();
 
@@ -33,6 +34,18 @@ namespace WebApiPatterns.Controllers
             return Accepted();
         }
 
+        [HttpPost("CancelExport")]
+        public async Task<ActionResult> CancelExportData()
+        {
+            string initiator = "TestUser";
+
+            var token = ExportDataToExternalSystem.GetUsersToken(initiator);
+
+            await token.CancelAsync();
+
+            return Ok();
+
+        }
 
         [HttpPost("GenerateReport")]
         [ProducesResponseType(StatusCodes.Status202Accepted)]
