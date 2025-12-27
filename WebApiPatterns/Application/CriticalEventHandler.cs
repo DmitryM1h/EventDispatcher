@@ -25,23 +25,25 @@ namespace WebApiPatterns.Application
 
             typesHandlers.TryGetValue(criticalEvent.Type, out var handler);
 
-            switch(criticalEvent.Type)
+            Task.Run(() =>
             {
-                case CriticalEventType.type1:
-                    if (handler is not null) handler(criticalEvent);
-                    else CreateIncidentOne(criticalEvent);
-                    break;
+                switch (criticalEvent.Type)
+                {
+                    case CriticalEventType.type1:
+                        if (handler is not null) handler(criticalEvent);
+                        else CreateIncidentOne(criticalEvent);
+                        break;
 
-                case CriticalEventType.type2:
-                    if (handler is not null) handler(criticalEvent);
-                    else CreateIncidentTwo(criticalEvent);
-                    break;
+                    case CriticalEventType.type2:
+                        if (handler is not null) handler(criticalEvent);
+                        else CreateIncidentTwo(criticalEvent);
+                        break;
 
-                case CriticalEventType.type3:
-                    CreateIncidentThree(criticalEvent);
-                    break;
-            }
-
+                    case CriticalEventType.type3:
+                        CreateIncidentThree(criticalEvent);
+                        break;
+                }
+            });
         }
 
         private void CreateIncidentOne(CriticalEvent criticalEvent)

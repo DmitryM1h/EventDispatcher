@@ -62,6 +62,8 @@ namespace WebApiPatterns.Jobs
 
         protected abstract IAsyncEnumerable<int> ExecuteJobAsync(ICommand command);
 
+
+        // Вынести в отдельный класс Reporter.
         protected async Task NotifyProgress()
         {
             await HubContext.Clients.All.SendAsync("ExportDataTaskProgress", new { Initiator, ProgressPercent });

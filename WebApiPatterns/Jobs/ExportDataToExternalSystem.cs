@@ -10,22 +10,22 @@ namespace WebApiPatterns.Jobs
         protected override async IAsyncEnumerable<int> ExecuteJobAsync(ExportDataCommand command)
         {
 
-            await Task.Delay(TimeSpan.FromSeconds(5));
+            Task.Delay(TimeSpan.FromSeconds(5)).Wait(); // имитация синхронной работы
             ProgressPercent = 25;
 
             yield return 1;
 
-            await Task.Delay(TimeSpan.FromSeconds(5));
+            Task.Delay(TimeSpan.FromSeconds(5)).Wait();
             ProgressPercent = 50;
 
             yield return 1;
 
-            await Task.Delay(TimeSpan.FromSeconds(5));
+            Task.Delay(TimeSpan.FromSeconds(5)).Wait();
             ProgressPercent = 75;
 
             yield return 1;
 
-            await Task.Delay(TimeSpan.FromSeconds(5));
+            Task.Delay(TimeSpan.FromSeconds(5)).Wait();
             ProgressPercent = 100;
 
             yield return 1;
