@@ -2,9 +2,7 @@
 using CriticalEvents.Domain.Services;
 using CriticalEvents.Persistence;
 using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Collections.Generic;
-using System.Text;
+
 
 namespace CriticalEvents.Application
 {

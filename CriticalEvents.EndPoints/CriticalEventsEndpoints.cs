@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace CriticalEvents.EndPoints;
 
-public static class CriticalEventsAPI
+public static class CriticalEventsEndpoints
 {
     public static void AddCriticalEventsEndPoints(this IEndpointRouteBuilder app)
     {

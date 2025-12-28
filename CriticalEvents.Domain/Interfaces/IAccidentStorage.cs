@@ -1,7 +1,6 @@
 ﻿using CriticalEvents.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Text;
+
+
 
 namespace CriticalEvents.Domain.Interfaces
 {
