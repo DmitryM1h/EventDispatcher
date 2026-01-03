@@ -1,4 +1,5 @@
-﻿using CriticalEvents.Application;
+﻿
+using CriticalEvents.Application;
 using CriticalEvents.EndPoints;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;

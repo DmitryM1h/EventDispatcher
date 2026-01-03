@@ -13,6 +13,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..Modules\CriticalEvents\CriticalEvents.EndPoints\CriticalEvents.EndPoints.csproj" />
+    <ProjectReference Include="..\Modules\CriticalEvents\CriticalEvents.Application\CriticalEvents.Application.csproj" />
+    <ProjectReference Include="..\Modules\CriticalEvents\CriticalEvents.EndPoints\CriticalEvents.EndPoints.csproj" />
   </ItemGroup>
 
 </Project>
