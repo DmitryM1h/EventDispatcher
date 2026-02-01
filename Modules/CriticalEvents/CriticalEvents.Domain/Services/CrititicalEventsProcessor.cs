@@ -44,7 +44,7 @@ public class CrititicalEventsProcessor(IAccidentStorageFactory storageFactory, I
     private async void CreateIncidentOne(CriticalEvent criticalEvent, IAccidentStorage storage)
     {
         var accident = new Accident(Guid.NewGuid(), AccidentType.Type1, criticalEvent);
-        await storage.StoreEvent(accident);
+        await storage.StoreAccident(accident);
         _logger.LogInformation("Создан инцидент типа 1 на основе события: {event} ", new {id = criticalEvent.Id.ToString()});
 
     }
@@ -74,7 +74,7 @@ public class CrititicalEventsProcessor(IAccidentStorageFactory storageFactory, I
 
                 var accident = new Accident(Guid.NewGuid(), AccidentType.Type2, criticalEvent, ce);
 
-                await storage.StoreEvent(accident);
+                await storage.StoreAccident(accident);
 
                 _logger.LogInformation("Создан инцидент типа 2 на основе событий {events}" , new { firstEvent = accident.CriticalEventFirst.Id.ToString(), secondEvent = accident.CriticalEventSecond!.Id.ToString()});
             }
@@ -106,7 +106,7 @@ public class CrititicalEventsProcessor(IAccidentStorageFactory storageFactory, I
 
                 var accident = new Accident(Guid.NewGuid(), AccidentType.Type3, criticalEvent, ce);
 
-                await storage.StoreEvent(accident);
+                await storage.StoreAccident(accident);
 
                 _logger.LogInformation("Создан инцидент типа 3 на основе событий {events}", new { firstEvent = accident.CriticalEventFirst.Id.ToString(), secondEvent = accident.CriticalEventSecond!.Id.ToString() });
             }
@@ -127,7 +127,7 @@ public class CrititicalEventsProcessor(IAccidentStorageFactory storageFactory, I
 
             var accident = new Accident(Guid.NewGuid(), accidentType, criticalEvent);
 
-            await storage.StoreEvent(accident);
+            await storage.StoreAccident(accident);
 
             _logger.LogInformation("Создан инцидент на основе событий {accident}", new {accidentType, firstEvent = accident.CriticalEventFirst.Id.ToString()});
         }

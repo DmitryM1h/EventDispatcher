@@ -6,7 +6,7 @@ namespace CriticalEvents.Domain.Interfaces
 {
     public interface IAccidentStorage
     {
-        public Task StoreEvent(Accident @event);
+        public Task StoreAccident(Accident accident);
 
     }
 }
