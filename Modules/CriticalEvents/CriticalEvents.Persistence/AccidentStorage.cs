@@ -3,7 +3,6 @@ using CriticalEvents.Domain.Interfaces;
 using Dapper;
 using Microsoft.Data.SqlClient;
 using System.Data;
-using System.Diagnostics;
 
 namespace CriticalEvents.Persistence
 {
@@ -30,7 +29,7 @@ namespace CriticalEvents.Persistence
                 CreatedAt = DateTime.UtcNow
             }).ToList();
 
-            using SqlConnection db = new SqlConnection(connectionString);
+            using SqlConnection db = new(connectionString);
 
             await db.OpenAsync();
 

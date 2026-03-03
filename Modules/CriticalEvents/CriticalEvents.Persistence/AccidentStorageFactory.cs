@@ -10,7 +10,7 @@ namespace CriticalEvents.Persistence
         public Task<IAccidentStorage> CreateAccidentStorage()
         {
             var storage = new AccidentStorage();
-            return storage;
+            return Task.FromResult<IAccidentStorage>(storage);
         }
     }
 }

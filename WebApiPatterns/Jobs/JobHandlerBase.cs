@@ -10,8 +10,8 @@ namespace WebApiPatterns.Jobs
         private string Initiator { get; set; } = null!;
         protected int ProgressPercent { get; set; }
 
-        private readonly IHubContext<NotificationHub> HubContext;
-
+        private JobCompletionReporter _progressReporter;
+        
         private static ConcurrentDictionary<string, CancellationTokenSource> activeTasks = new();
 
         ILogger<JobHandlerBase<ICommand>> _logger;
@@ -20,9 +20,10 @@ namespace WebApiPatterns.Jobs
         {
             Initiator = initiator;
             ProgressPercent = 0;
-            HubContext = serviceProvider.GetRequiredService<IHubContext<NotificationHub>>();
 
             _logger = serviceProvider.GetRequiredService<ILogger<JobHandlerBase<ICommand>>>();
+
+            _progressReporter = serviceProvider.GetRequiredService<JobCompletionReporter>();
 
             var src = new CancellationTokenSource();
 
@@ -30,16 +31,15 @@ namespace WebApiPatterns.Jobs
 
         }
 
-
         public async Task ExecuteJob(ICommand command)
         {
             try
             {
                 await foreach (var _ in ExecuteJobAsync(command))
                 {
-                    await NotifyProgress();
+                    await _progressReporter.NotifyProgress(Initiator, ProgressPercent);
 
-                    await Task.Delay(20);
+                    await Task.Yield();
 
                     ThrowIfTaskCancelled();
                 }
@@ -47,34 +47,17 @@ namespace WebApiPatterns.Jobs
             catch (OperationCanceledException)
             {
                 _logger.LogInformation("Job jas been cancelled by {user}", Initiator);
-                await NotifyCancel();
+                await _progressReporter.NotifyCancel(Initiator);
             }
             catch (Exception ex)
             {
                 _logger.LogCritical("Application job failed {details}", ex.ToString());
-                await NotifyError();
+                await _progressReporter.NotifyError(Initiator);
             }
             finally
             {
                 activeTasks[Initiator].Dispose();
             }
-        }
-
-        protected abstract IAsyncEnumerable<int> ExecuteJobAsync(ICommand command);
-
-
-        // Вынести в отдельный класс Reporter.
-        protected async Task NotifyProgress()
-        {
-            await HubContext.Clients.All.SendAsync("ExportDataTaskProgress", new { Initiator, ProgressPercent });
-        }
-        protected async Task NotifyCancel()
-        {
-            await HubContext.Clients.All.SendAsync("ExportDataTaskCancelled", $"Задача отменена пользователем {Initiator}");
-        }
-        protected async Task NotifyError()
-        {
-            await HubContext.Clients.All.SendAsync("ExportDataTaskReceiveError", $"Задача завершена с ошибкой. Инциатор: {Initiator}");
         }
 
         public static void CancelTask(string initiator)
@@ -86,5 +69,26 @@ namespace WebApiPatterns.Jobs
         {
             activeTasks[Initiator].Token.ThrowIfCancellationRequested();
         }
+        protected abstract IAsyncEnumerable<int> ExecuteJobAsync(ICommand command);
+       
     }
+
+
+    //todo generic
+    public class JobCompletionReporter(IHubContext<NotificationHub> HubContext)
+    {
+        public async Task NotifyProgress(string Initiator, int ProgressPercent)
+        {
+            await HubContext.Clients.All.SendAsync("ExportDataTaskProgress", new { Initiator, ProgressPercent });
+        }
+        public async Task NotifyCancel(string Initiator)
+        {
+            await HubContext.Clients.All.SendAsync("ExportDataTaskCancelled", $"Задача отменена пользователем {Initiator}");
+        }
+        public async Task NotifyError(string Initiator)
+        {
+            await HubContext.Clients.All.SendAsync("ExportDataTaskReceiveError", $"Задача завершена с ошибкой. Инциатор: {Initiator}");
+        } 
+    }
+
 }
