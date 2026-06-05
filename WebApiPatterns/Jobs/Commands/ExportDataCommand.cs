@@ -8,7 +8,7 @@ namespace WebApiPatterns.Jobs.Commands
 
         public ExportDataCommand(string username, string description)
         {
-            base.UserName = username;
+            base.initiator = new Initiator(username);
             Description = description;
         }
     }

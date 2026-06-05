@@ -34,7 +34,7 @@ namespace WebApiPatterns.Controllers
         {
             string initiator = "TestUser";
 
-            ExportDataToExternalSystem.CancelTask(initiator);
+            ExportDataToExternalSystem.CancelTask(new Initiator(initiator));
 
             return Ok();
 

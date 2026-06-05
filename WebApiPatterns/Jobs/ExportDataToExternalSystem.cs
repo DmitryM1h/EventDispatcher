@@ -5,30 +5,26 @@ namespace WebApiPatterns.Jobs
 {
     public class ExportDataToExternalSystem : JobHandlerBase<ExportDataCommand>, IJobHandler<ExportDataCommand>
     {
-        public ExportDataToExternalSystem(IServiceProvider serviceProvider, string initiator) : base(serviceProvider, initiator) { }
+        public ExportDataToExternalSystem(IServiceScopeFactory serviceScopeFactory, Initiator initiator) : base(serviceScopeFactory, initiator) { }
 
-        protected override async IAsyncEnumerable<int> ExecuteJobAsync(ExportDataCommand command)
+        protected override async IAsyncEnumerable<ProgressBar> ExecuteJobAsync(ExportDataCommand command)
         {
 
             Task.Delay(TimeSpan.FromSeconds(5)).Wait(); // имитация синхронной работы
-            ProgressPercent = 25;
 
-            yield return 1;
-
-            Task.Delay(TimeSpan.FromSeconds(5)).Wait();
-            ProgressPercent = 50;
-
-            yield return 1;
+            yield return new ProgressBar(25);
 
             Task.Delay(TimeSpan.FromSeconds(5)).Wait();
-            ProgressPercent = 75;
 
-            yield return 1;
+            yield return new ProgressBar(50);
 
             Task.Delay(TimeSpan.FromSeconds(5)).Wait();
-            ProgressPercent = 100;
 
-            yield return 1;
+            yield return new ProgressBar(75);
+
+            Task.Delay(TimeSpan.FromSeconds(5)).Wait();
+
+            yield return new ProgressBar(100);
 
             Console.WriteLine("Export data completed");
         }
@@ -37,29 +33,29 @@ namespace WebApiPatterns.Jobs
      
 
 
-        [Obsolete]
-        private async Task ExecuteJobObsolete(ExportDataCommand command)
-        {
+        //[Obsolete]
+        //private async Task ExecuteJobObsolete(ExportDataCommand command)
+        //{
 
-            await NotifyProgress();
+        //    await NotifyProgress();
 
-            await Task.Delay(TimeSpan.FromSeconds(10));
-            ProgressPercent = 50;
-            await NotifyProgress();
+        //    await Task.Delay(TimeSpan.FromSeconds(10));
+        //    ProgressPercent = 50;
+        //    await NotifyProgress();
 
-            ThrowIfTaskCancelled();
+        //    ThrowIfTaskCancelled();
 
-            await Task.Delay(TimeSpan.FromSeconds(5));
-            ProgressPercent = 75;
-            await NotifyProgress();
+        //    await Task.Delay(TimeSpan.FromSeconds(5));
+        //    ProgressPercent = 75;
+        //    await NotifyProgress();
 
-            ThrowIfTaskCancelled();
+        //    ThrowIfTaskCancelled();
 
-            await Task.Delay(TimeSpan.FromSeconds(5));
-            ProgressPercent = 100;
-            await NotifyProgress();
+        //    await Task.Delay(TimeSpan.FromSeconds(5));
+        //    ProgressPercent = 100;
+        //    await NotifyProgress();
 
-            Console.WriteLine("Export data completed");
-        }
+        //    Console.WriteLine("Export data completed");
+        //}
     }
 }

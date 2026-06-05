@@ -8,7 +8,7 @@ namespace WebApiPatterns.Jobs.Commands
 
         public GenerateReportCommand(string description, string initiator)
         {
-            base.UserName = initiator;
+            base.initiator = new Initiator(initiator);
             Description = description;
         }
     }

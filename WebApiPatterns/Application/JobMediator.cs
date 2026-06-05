@@ -6,7 +6,7 @@ using WebApiPatterns.Interfaces;
 
 namespace WebApiPatterns.Application
 {
-    public class JobMediator(IServiceProvider serviceProvider)
+    public class JobMediator(IServiceScopeFactory scopeFactory)
     {
         private static readonly ConcurrentDictionary<Type, TypeInfo> _cachedHandlers = new();
 
@@ -46,7 +46,7 @@ namespace WebApiPatterns.Application
 
             var interfaceType = typeof(IJobHandler<>).MakeGenericType(commandType);
 
-            var handlerInstance = Activator.CreateInstance(handlertype, [serviceProvider, command.UserName]);
+            var handlerInstance = Activator.CreateInstance(handlertype, [scopeFactory, command.initiator]);
 
             var method = interfaceType.GetMethod("ExecuteJob");
 

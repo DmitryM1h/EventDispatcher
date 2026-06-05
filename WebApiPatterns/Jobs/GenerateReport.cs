@@ -5,9 +5,9 @@ namespace WebApiPatterns.Jobs
 {
     public class GenerateReport : JobHandlerBase<GenerateReportCommand>, IJobHandler<GenerateReportCommand>
     {
-        public GenerateReport(IServiceProvider serviceProvider, string initiator) : base(serviceProvider, initiator) { }
+        public GenerateReport(IServiceScopeFactory serviceScopeFactory, Initiator initiator) : base(serviceScopeFactory, initiator) { }
        
-        protected override IAsyncEnumerable<int> ExecuteJobAsync(GenerateReportCommand command)
+        protected override IAsyncEnumerable<ProgressBar> ExecuteJobAsync(GenerateReportCommand command)
         {
             throw new NotImplementedException();
         }

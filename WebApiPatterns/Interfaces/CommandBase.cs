@@ -1,8 +1,10 @@
-﻿namespace WebApiPatterns.Interfaces
+﻿using WebApiPatterns.Jobs;
+
+namespace WebApiPatterns.Interfaces
 {
     public class CommandBase
     {
-        public string UserName { get; init; } = null!;
+        public Initiator initiator { get; init; } = null!;
 
     }
 }

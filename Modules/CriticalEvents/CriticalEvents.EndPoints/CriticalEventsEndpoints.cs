@@ -17,11 +17,8 @@ public static class CriticalEventsEndpoints
 
             return Results.Accepted();
         })
-        .Produces<string>(StatusCodes.Status200OK)
+        .Produces<string>(StatusCodes.Status201Created)
         .Produces(StatusCodes.Status401Unauthorized)
-        .Produces(StatusCodes.Status404NotFound)      // Если пользователь не найден
-        .WithTags("Notifications", "SSE")             // Теги для Swagger
-        .WithName("GetPatientNotifications")          // Имя эндпоинта
-        .WithDescription("Stream real-time notifications for a patient");
+        .Produces(StatusCodes.Status404NotFound);
     }
 }

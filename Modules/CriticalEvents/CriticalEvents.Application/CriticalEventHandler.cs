@@ -1,5 +1,4 @@
 ﻿using CriticalEvents.Domain.Entities;
-using CriticalEvents.Domain.Interfaces;
 using CriticalEvents.Domain.Services;
 using CriticalEvents.Domain.Services.Requests;
 
