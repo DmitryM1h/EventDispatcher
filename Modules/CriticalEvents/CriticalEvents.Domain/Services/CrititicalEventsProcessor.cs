@@ -9,7 +9,7 @@ namespace CriticalEvents.Domain.Services;
 public class CrititicalEventsProcessor(IAccidentStorageFactory storageFactory, ILogger _logger)
 {
 
-    private readonly ConcurrentDictionary<CriticalEventType, Action<CriticalEvent>> typesHandlers = new();
+    private readonly ConcurrentDictionary<CriticalEventType, Action<CriticalEvent>?> typesHandlers = new();
 
 
     public async Task ReceiveCriticalEvent(CriticalEvent criticalEvent)
@@ -20,28 +20,32 @@ public class CrititicalEventsProcessor(IAccidentStorageFactory storageFactory, I
 
         IAccidentStorage storage = await storageFactory.CreateAccidentStorage();
 
-        _ = Task.Run(() =>
+        _ = Task.Run(async () =>
         {
             switch (criticalEvent.Type)
             {
                 case CriticalEventType.type1:
-                    if (handler is not null) handler(criticalEvent);
-                    else CreateIncidentOne(criticalEvent, storage);
+                    if (handler is not null) 
+                        handler(criticalEvent);
+                    else 
+                        await CreateIncidentOne(criticalEvent, storage);
                     break;
 
                 case CriticalEventType.type2:
-                    if (handler is not null) handler(criticalEvent);
-                    else CreateIncidentTwo(criticalEvent, storage);
+                    if (handler is not null)
+                        handler(criticalEvent);
+                    else 
+                        await CreateIncidentTwo(criticalEvent, storage);
                     break;
 
                 case CriticalEventType.type3:
-                    CreateIncidentThree(criticalEvent, storage);
+                    await CreateIncidentThree(criticalEvent, storage);
                     break;
             }
         });
     }
 
-    private async void CreateIncidentOne(CriticalEvent criticalEvent, IAccidentStorage storage)
+    private async Task CreateIncidentOne(CriticalEvent criticalEvent, IAccidentStorage storage)
     {
         var accident = new Accident(Guid.NewGuid(), AccidentType.Type1, criticalEvent);
         await storage.StoreAccident(accident);
@@ -49,8 +53,7 @@ public class CrititicalEventsProcessor(IAccidentStorageFactory storageFactory, I
 
     }
 
-    // async Task?
-    private async void CreateIncidentTwo(CriticalEvent criticalEvent, IAccidentStorage storage)
+    private async Task CreateIncidentTwo(CriticalEvent criticalEvent, IAccidentStorage storage)
     {
         var sourceEventDate = DateTime.Now;
         int secondsToWait = 20;
@@ -81,7 +84,7 @@ public class CrititicalEventsProcessor(IAccidentStorageFactory storageFactory, I
         }
     }
 
-    private async void CreateIncidentThree(CriticalEvent criticalEvent, IAccidentStorage storage)
+    private async Task CreateIncidentThree(CriticalEvent criticalEvent, IAccidentStorage storage)
     {
         var sourceEventDate = DateTime.Now;
 
@@ -138,28 +141,25 @@ public class CrititicalEventsProcessor(IAccidentStorageFactory storageFactory, I
 
     }
 
-    // делегаты непотокобезопасны. lock? или другой подход
     private void AddTypeHandler(CriticalEventType type, Action<CriticalEvent> handler)
     {
-        typesHandlers.TryGetValue(type, out var existingHandlers);
-
-        if (existingHandlers is not null)
+        typesHandlers.AddOrUpdate(type, 
+        criticalEvent => handler(criticalEvent), 
+        (criticalEventType, currentAction) =>
         {
-            existingHandlers += handler;
-            typesHandlers[type] = existingHandlers;
-        }
-        else
-        {
-            typesHandlers[type] = handler;
-        }
+            currentAction += handler;
+            return currentAction;
+        });
     }
     private void RemoveTypeHandler(CriticalEventType type, Action<CriticalEvent> handler)
     {
-        typesHandlers.TryGetValue(type, out var existingHandlers);
-
-        var updatedHandlers = existingHandlers - handler;
-
-        typesHandlers[type] = updatedHandlers!;
+        typesHandlers.AddOrUpdate(type,
+       criticalEvent => { },
+       (criticalEventType, currentAction) =>
+       {
+           currentAction -= handler;
+           return currentAction;
+       });
     }
 
 }
